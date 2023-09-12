@@ -13,7 +13,7 @@ const (
 	height = 480
 )
 
-var blockPull []Block
+var blockPull []*Block
 
 var (
 	circle = Circle{40, height / 2.5, 10, 5, -5}
@@ -47,12 +47,14 @@ func Clamp(f, low, high float64) float64 {
 	return f
 }
 
-func removeAndCompress(key int, sl []Block) []Block {
-	var loc []Block
+func removeAndCompress(key int, sl []*Block) {
+	//var loc []*Block
 
-	loc = sl[:key]
-	loc = append(loc, sl[key+1:]...)
-	return loc
+	sl[key] = nil
+
+	//loc = sl[:key]
+	//loc = append(loc, sl[key+1:]...)
+	//return loc
 }
 
 // LOGIC LOOP
@@ -72,10 +74,12 @@ func (g *Game) Update() error {
 		}
 
 		for i, v := range blockPull {
-			if circle.posX-circle.radius < v.posX+v.width && circle.posX+circle.radius > v.posX && circle.posY-circle.radius < v.posY+player.height && circle.posY+circle.radius > v.posY {
-				circle.vectorY = -circle.vectorY
-				blockPull = removeAndCompress(i, blockPull)
-				continue
+			if v != nil {
+				if circle.posX-circle.radius < v.posX+v.width && circle.posX+circle.radius > v.posX && circle.posY-circle.radius < v.posY+player.height && circle.posY+circle.radius > v.posY {
+					circle.vectorY = -circle.vectorY
+					removeAndCompress(i, blockPull)
+					continue
+				}
 			}
 		}
 		if circle.posY+circle.radius >= height-5 {
@@ -103,7 +107,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	//ebitenutil.DebugPrint(screen, strconv.Itoa(score))
 
 	for _, v := range blockPull {
-		ebitenutil.DrawRect(screen, v.posX, v.posY, v.width, v.height, color.White)
+		if v != nil {
+			//print(v.posX)
+			ebitenutil.DrawRect(screen, v.posX, v.posY, v.width, v.height, color.White)
+		}
 	}
 
 	ebitenutil.DrawRect(screen, player.posX, player.posY, player.width, player.height, color.White)
@@ -117,9 +124,11 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 
 func main() {
 
+	blockPull = make([]*Block, 20*5)
+
 	for y := 0; y <= 5; y++ {
 		for x := 0; x <= 20; x++ {
-			blockPull = append(blockPull, Block{float64(x) * 35, float64(y) * 10, 35, 10})
+			blockPull = append(blockPull, &Block{float64(x) * 35, float64(y) * 10, 35, 10})
 		}
 	}
 
